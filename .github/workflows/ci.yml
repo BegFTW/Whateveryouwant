@@ -1,0 +1,31 @@
+name: CI Workflow
+on: [push, pull_request, workflow_dispatch]
+
+  # Allows you to run this workflow manually from the Actions tab
+jobs:
+  build-and-test:
+    name: build-and-test-windows
+    runs-on: windows-latest
+
+    env:
+        Solution_Name: Lab_5.sln
+        Test_Project_Path: TestProject1/TestProject1.csproj
+
+    steps:
+                  
+          - name: Checkout repository
+            uses: actions/checkout@v4
+          
+          - name: Install .Net core
+            uses: actions/setup-dotnet@v4
+            with:
+              dotnet-version: '6.0.x'
+          - name: Restore packages
+            run: dotnet restore ${{ env.Solution_Name }}
+
+
+                    
+          - name: Build Solution
+            run: dotnet build ${{ env.Solution_Name }} --configuration Release --no-restore
+          - name: Test and publish results
+            run: dotnet test ${{ env.Test_Project_Path }} --no-restore --verbosity normal
