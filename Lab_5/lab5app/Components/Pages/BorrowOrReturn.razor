@@ -1,0 +1,121 @@
+﻿@page "/borrow"
+@using Lab_5.Services
+@using Lab_5.Data
+@inject NavigationManager Nav
+@inject ILibraryService LibraryService
+
+<h3>Borrow a Book</h3>
+<div >
+    <label for="userID">Enter the ID of the user you'd like to borrow books for!</label>
+    <input id="userID" @bind="userID" class="form-text" />
+    <button @onclick=UpdateCurrentUser>Select this user</button>
+</div>
+@if (user != null)
+{
+    <h3>Current borrowed books by user @user.Name</h3>
+    <table>
+        @foreach(Book book in borrowedBooks[user])
+        {
+            <tr>
+                <td></td>
+                <td>@book.Title</td>
+                <td>@book.Author</td>
+            </tr>
+        }
+    </table>
+}
+
+<select @bind="selectedBookId">
+    <option value="">Select Book</option>
+    @foreach (var book in books)
+    {
+        <option value="@book.Id">@book.Title</option>
+    }
+</select>
+
+<button @onclick="BorrowBook">Borrow Book</button>
+
+<h3>Return a Book</h3>
+
+@if(user != null){
+    @if (borrowedBooks[user].Count > 0)
+{
+    <select @bind=selectedBookIdForReturn>
+        <option value="">Select Book to Return</option>
+        @foreach (var book in borrowedBooks[user])
+        {
+            <option value="@book.Id">@book.Title</option>
+        }
+    </select>
+}
+<button @onclick=ReturnBook>Return Book</button>
+}
+@code {
+    public List<Book> books { get; set; } = new List<Book>();
+    public List<User> users { get; set; } = new List<User>();
+    public Dictionary<User, List<Book>> borrowedBooks { get; set; } = new Dictionary<User, List<Book>>();
+
+    public void LoadData()
+    {
+        books = LibraryService.GetBooks();
+        users = LibraryService.GetUsers();
+        borrowedBooks = LibraryService.GetBorrowedBooks();
+        StateHasChanged();
+    }
+    protected override Task OnInitializedAsync()
+    {
+        LoadData();
+
+        return base.OnInitializedAsync();
+    }
+
+    public int selectedUserId { get; set; }
+    public int selectedBookId { get; set; }
+    public int selectedUserIdForReturn { get; set; }
+    public int selectedBookIdForReturn { get; set; }
+    public int userID { get; set; }
+    public List<Book> borrowedBooksForUser = new List<Book>();
+    public User user { get; set; }
+
+    void BorrowBook()
+    {
+        if (user.Id > 0 && selectedBookId > 0)
+        {
+            LibraryService.BorrowBook(user.Id, selectedBookId);
+            selectedBookId = 0;
+            StateHasChanged();
+        }
+    }
+
+    void OnUserSelectionChanged()
+    {
+        var user = LibraryService.GetUsers().FirstOrDefault(u => u.Id == selectedUserIdForReturn);
+        this.user.Name = user.Name;
+        this.user.Id = user.Id;
+        if (!borrowedBooks.ContainsKey(this.user))
+        {
+            borrowedBooks[this.user] = new List<Book>();
+        }
+        borrowedBooks = LibraryService.GetBorrowedBooks();
+        StateHasChanged();
+    }
+
+    void ReturnBook()
+    {
+        if (userID > 0 && selectedBookIdForReturn > 0)
+        {
+            LibraryService.ReturnBook(userID, selectedBookIdForReturn);
+            selectedBookIdForReturn = 0;
+            StateHasChanged();
+        }
+    }
+    public void UpdateCurrentUser()
+    {
+        user = users.FirstOrDefault(u => u.Id == userID);
+        if (!borrowedBooks.ContainsKey(user))
+        {
+            borrowedBooks[user] = new List<Book>();
+        }
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,46 @@
+﻿@using Lab_5.Services
+@using Lab_5.Data
+@inject NavigationManager Nav
+@page "/manage-books"
+@inject ILibraryService LibraryService
+
+<h3>Manage Books</h3>
+
+@foreach (var book in LibraryService.GetBooks())
+{
+    <p>
+        @book.Title by @book.Author (ISBN: @book.ISBN)
+        <button @onclick="() => EditBook(book)">Edit</button>
+        <button @onclick="() => DeleteBook(book.Id)">Delete</button>
+    </p>
+}
+
+<h4>Add/Edit Book</h4>
+<input @bind="newBook.Title" placeholder="Title" />
+<input @bind="newBook.Author" placeholder="Author" />
+<input @bind="newBook.ISBN" placeholder="ISBN" />
+<button @onclick="SaveBook">Save</button>
+
+@code {
+    private Book newBook = new Book();
+
+    void SaveBook()
+    {
+        if (newBook.Id == 0) 
+            LibraryService.AddBook(newBook);
+        else 
+            LibraryService.EditBook(newBook);
+
+        newBook = new Book(); 
+    }
+
+    void EditBook(Book book)
+    {
+        newBook = book;
+    }
+
+    void DeleteBook(int id)
+    {
+        LibraryService.DeleteBook(id);
+    }
+}

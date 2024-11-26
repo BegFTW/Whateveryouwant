@@ -1,0 +1,49 @@
+﻿@page "/users"
+@using Lab_5.Services
+@using Lab_5.Data
+@inject NavigationManager Nav
+@inject ILibraryService LibraryService
+
+<h3>Manage Users</h3>
+
+@foreach (var user in LibraryService.GetUsers())
+{
+    <p>
+        @user.Name (@user.Email)
+        <button @onclick="() => EditUser(user)">Edit</button>
+        <button @onclick="() => DeleteUser(user.Id)">Delete</button>
+    </p>
+}
+
+<h4>Add/Edit User</h4>
+<input @bind="newUser.Name" placeholder="Name" />
+<input @bind="newUser.Email" placeholder="Email" />
+<button @onclick=SaveUser>Save</button>
+
+@code {
+    public User newUser = new User() { Id = 0 };
+
+    public string name { get; set; }
+    public string email { get; set; }
+
+    public void SaveUser()
+    {
+        if (newUser.Id == 0) 
+            LibraryService.AddUser(newUser);
+        else 
+            LibraryService.EditUser(newUser);
+
+        newUser = new User(); 
+        StateHasChanged();
+    }
+
+    public void EditUser(User user)
+    {
+        newUser = user;
+    }
+
+    public void DeleteUser(int id)
+    {
+        LibraryService.DeleteUser(id);
+    }
+}
